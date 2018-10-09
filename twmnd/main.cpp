@@ -4,11 +4,14 @@
 #include <QLocale>
 #include <QLibraryInfo>
 #include <QTranslator>
+#include <QDesktopWidget>
+
 #include "widget.h"
 #include "xcb/xcb.h"
 #include "dbusinterface.h"
-#include <iostream>
 
+#include <iostream>
+#include <memory>
 
 #ifndef VERSION
 #define VERSION "1.2"
@@ -41,6 +44,20 @@ void logOutput(QtMsgType type, const QMessageLogContext &context, const QString 
 #endif
 }
 
+int spawn_per_screen(const char *wmname, DBusInterface &dbus, QApplication &a) {
+    std::vector<std::unique_ptr<Widget>> widgets;
+
+    auto no_of_screens = QDesktopWidget().screenCount();
+
+    for (int screen = 0; screen < no_of_screens; ++screen) {
+        widgets.push_back(std::make_unique<Widget>(wmname, screen));
+    }
+
+    for (auto &w : widgets) w->connectToDBus(dbus);
+
+    return a.exec();
+}
+
 int main(int argc, char *argv[])
 {
     std::cout << "Starting twmnd version " << VERSION << std::endl;
@@ -56,7 +73,13 @@ int main(int argc, char *argv[])
     if (argc > 1) {
       wname = argv[1];
     }
+
     DBusInterface dbus(&a);
+
+    if (strcmp(wname, "--per-screen") == 0) {
+        return spawn_per_screen("twmn", dbus, a);
+    }
+
     Widget w(wname);
     w.connectToDBus(dbus);
     return a.exec();

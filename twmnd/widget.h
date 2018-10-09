@@ -13,7 +13,7 @@ class Widget : public QWidget
 {
     Q_OBJECT
 public:
-    Widget(const char* wname);
+    Widget(const char* wname, int screen = -1);
     ~Widget();
 
 private slots:
@@ -137,7 +137,7 @@ private:
     QStack<Message>         m_previousStack;
     QPoint                  tmpBouncePos;
     int                     m_computedWidth;
-
+    int                     m_screen;
     std::string             m_activePositionSlot;
 };
 
